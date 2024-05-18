@@ -45,6 +45,10 @@ function(gss_setup_dependencies)
     cpmaddpackage("gh:boostorg/beast#boost-1.84.0")
   endif()
 
+  if (NOT TARGET nlohmann_json::nlohmann_json)
+    cpmaddpackage("gh:nlohmann/json@3.11.2")
+  endif()
+
   if(NOT TARGET CLI11::CLI11)
     cpmaddpackage("gh:CLIUtils/CLI11@2.4.2")
   endif()
