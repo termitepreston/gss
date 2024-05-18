@@ -1,16 +1,23 @@
-# gss
+# GSS
 
-[![ci](https://github.com/termitepreston/gss/actions/workflows/ci.yml/badge.svg)](https://github.com/termitepreston/gss/actions/workflows/ci.yml)
-[![codecov](https://codecov.io/gh/termitepreston/gss/branch/main/graph/badge.svg)](https://codecov.io/gh/termitepreston/gss)
-[![CodeQL](https://github.com/termitepreston/gss/actions/workflows/codeql-analysis.yml/badge.svg)](https://github.com/termitepreston/gss/actions/workflows/codeql-analysis.yml)
+## About Generic Service Scheduler (gss)
 
-## About gss
+- gss allows user to schedule tasks with a limited time budget from a web-front end 
 
 
+## Building
 
-## More Details
+This project requires the following tools 
+to be installed to work:
 
- * [Dependency Setup](README_dependencies.md)
- * [Building Details](README_building.md)
- * [Troubleshooting](README_troubleshooting.md)
- * [Docker](README_docker.md)
+1. C++20 and up
+2. ccache
+
+
+```bash
+# Inside project root.
+cmake -B build/ -S . -G "Ninja Multi-Config"
+
+# Inside gss/build
+cmake --build . --config Debug
+```
