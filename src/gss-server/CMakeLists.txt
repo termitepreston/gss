@@ -1,4 +1,4 @@
-add_executable(gss-server main.cpp net.hpp beast.hpp shared_state.hpp shared_state.cpp websocket_session.hpp websocket_session.cpp listener.hpp listener.cpp http_session.hpp http_session.cpp)
+add_executable(gss-server main.cpp net.hpp beast.hpp shared_state.hpp shared_state.cpp websocket_session.hpp websocket_session.cpp listener.hpp listener.cpp http_session.hpp http_session.cpp Ticker.hpp Ticker.cpp)
 
 target_link_libraries(
   gss-server
