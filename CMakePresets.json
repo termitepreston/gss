@@ -170,6 +170,28 @@
             }
         },
         {
+            "name": "unixlike-clang-debug-fast",
+            "displayName": "clang Debug (fast)",
+            "description": "Turns almost all security configs for faster builds.",
+            "inherits": "conf-unixlike-common",
+            "cacheVariables": {
+                "CMAKE_C_COMPILER": "clang",
+                "CMAKE_CXX_COMPILER": "clang++",
+                "CMAKE_BUILD_TYPE": "Debug",
+                "gss_WARNINGS_AS_ERRORS": "OFF",
+                "gss_ENABLE_USER_LINKER": "ON",
+                "USER_LINKER_OPTION": "mold",
+                "gss_ENABLE_IPO": "OFF",
+                "gss_ENABLE_SANITIZER_ADDRESS": "OFF",
+                "gss_ENABLE_SANITIZER_LEAK": "OFF",
+                "gss_ENABLE_SANITIZER_UNDEFINED": "OFF",
+                "gss_ENABLE_SANITIZER_THREAD": "OFF",
+                "gss_ENABLE_CLANG_TIDY": "OFF",
+                "gss_ENABLE_CPPCHECK": "OFF",
+                "gss_BUILD_FUZZ_TESTS": "OFF"
+            }
+        },
+        {
             "name": "unixlike-clang-release",
             "displayName": "clang Release",
             "description": "Target Unix-like OS with the clang compiler, release build type",
