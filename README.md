@@ -12,12 +12,21 @@ to be installed to work:
 
 1. C++20 and up
 2. ccache
+3. Ninja
+4. mold
 
 
 ```bash
 # Inside project root.
-cmake -B build/ -S . -G "Ninja Multi-Config" -Dgss_WARNINGS_AS_ERRORS=OFF
+cmake -B build/ -S . -G "Ninja Multi-Config"
+
+# Or for faster builds, which turn off most optimizations and safeguards.
+cmake -B build/ -S . --preset unixlike-clang-debug-fast
 
 # Inside gss/build
-cmake --build . --config Debug
+cmake --build . -j 8
+
+# Then run
+
+gss-server --address 0.0.0.0 --port 8080 --threads 4
 ```
