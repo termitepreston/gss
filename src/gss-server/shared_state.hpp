@@ -5,11 +5,12 @@
 #include <memory>
 #include <mutex>
 #include <string>
+#include <unordered_map>
 #include <unordered_set>
 
 class websocket_session;
 
-class shared_state {
+class SharedState {
     const std::string doc_root_;
 
     std::mutex mutex_;
@@ -17,7 +18,7 @@ class shared_state {
     std::unordered_set<websocket_session *> sessions_;
 
   public:
-    explicit shared_state(std::string doc_root);
+    explicit SharedState(std::string doc_root);
 
     std::string const &doc_root() const noexcept { return doc_root_; }
 

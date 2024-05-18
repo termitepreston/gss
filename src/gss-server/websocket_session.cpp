@@ -2,7 +2,7 @@
 #include <iostream>
 
 websocket_session::websocket_session(
-    tcp::socket &&socket, boost::shared_ptr<shared_state> const &state)
+    tcp::socket &&socket, boost::shared_ptr<SharedState> const &state)
     : ws_(std::move(socket)), state_(state) {}
 
 websocket_session::~websocket_session() {

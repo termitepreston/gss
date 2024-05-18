@@ -4,11 +4,11 @@
 #include <CLI/CLI.hpp>
 #include <cstdlib>
 #include <exception>
-#include <fmt/core.h>
 #include <string>
 
 #include <spdlog/spdlog.h>
 
+#include "Ticker.hpp"
 #include "listener.hpp"
 #include "shared_state.hpp"
 
@@ -57,8 +57,15 @@ int main(int argc, const char **argv) {
 
         net::io_context ioc;
 
+        // timer code.
+        boost::posix_time::seconds interval{6};
+
+        auto ss = boost::make_shared<SharedState>(doc_root);
+
+        boost::make_shared<Ticker>(ioc, interval, ss)->run();
+
         boost::make_shared<listener>(ioc, tcp::endpoint{address, port.value()},
-                                     boost::make_shared<shared_state>(doc_root))
+                                     ss)
             ->run();
 
         net::signal_set signals{ioc, SIGINT, SIGTERM};

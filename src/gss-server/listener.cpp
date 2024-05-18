@@ -3,7 +3,7 @@
 #include <iostream>
 
 listener::listener(net::io_context &ioc, tcp::endpoint endpoint,
-                   boost::shared_ptr<shared_state> const &state)
+                   boost::shared_ptr<SharedState> const &state)
     : ioc_(ioc), acceptor_(ioc), state_(state) {
     beast::error_code ec;
 

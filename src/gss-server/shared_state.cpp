@@ -1,21 +1,21 @@
 #include "shared_state.hpp"
 #include "websocket_session.hpp"
 
-shared_state::shared_state(std::string doc_root) : doc_root_{doc_root} {}
+SharedState::SharedState(std::string doc_root) : doc_root_{doc_root} {}
 
-void shared_state::join(websocket_session *session) {
+void SharedState::join(websocket_session *session) {
     std::lock_guard<std::mutex> lock{mutex_};
 
     sessions_.insert(session);
 }
 
-void shared_state::leave(websocket_session *session) {
+void SharedState::leave(websocket_session *session) {
     std::lock_guard<std::mutex> lock{mutex_};
 
     sessions_.erase(session);
 }
 
-void shared_state::send(std::string message) {
+void SharedState::send(std::string message) {
     // put the message inside a shared pointer.
     const auto ss = boost::make_shared<const std::string>(std::move(message));
 

@@ -181,7 +181,7 @@ handle_request(beast::string_view doc_root,
 //------------------------------------------------------------------------------
 
 http_session::http_session(tcp::socket &&socket,
-                           boost::shared_ptr<shared_state> const &state)
+                           boost::shared_ptr<SharedState> const &state)
     : stream_(std::move(socket)), state_(state) {}
 
 void http_session::run() { do_read(); }
