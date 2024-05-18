@@ -1,13 +1,13 @@
 #pragma once
 
 #include <cstdlib>
-#include <exception>
-#include <gss/sample_library_export.hpp>
+#include <gss/containers_export.hpp>
 #include <memory>
+#include <stdexcept>
 #include <utility>
 #include <vector>
 
-[[nodiscard]] SAMPLE_LIBRARY_EXPORT int factorial(int) noexcept;
+[[nodiscard]] CONTAINERS_EXPORT int factorial(int) noexcept;
 
 [[nodiscard]] constexpr int factorial_constexpr(int input) noexcept {
     if (input == 0) {
@@ -54,7 +54,7 @@ template <class T> class Heap {
 
 template <class T> class Stack {
   private:
-    size_t top_;
+    int top_;
     size_t capacity_;
     std::unique_ptr<T[]> array_;
 
@@ -64,20 +64,20 @@ template <class T> class Stack {
 
     ~Stack() {}
 
-    T &peek() const noexcept { return array_[top]; }
+    T &peek() const noexcept { return array_[top_]; }
 
     T &pop() { return array_[--top_]; }
 
     void push(T value) {
         if (top_ + 1 == capacity_)
-            throw std::exception("Stack overflow.");
+            throw std::out_of_range("Stack overflow.");
 
-        array[++top_] = value;
+        array_[++top_] = value;
     }
 
-    bool empty() const noexcept { return top < 0; }
+    bool empty() const noexcept { return top_ < 0; }
 
-    bool full() const noexcept { return top == capacity_; }
+    bool full() const noexcept { return top_ == capacity_; }
 };
 
 template <class T> class Node {

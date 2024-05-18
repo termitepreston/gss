@@ -52,7 +52,7 @@ int main(int argc, const char **argv) {
         auto const address =
             net::ip::make_address(address_in.value_or("0.0.0.0"));
 
-        const char *doc_root = "/home/alazar/dev/gss/src/ftxui_sample";
+        const char *doc_root = "/home/alazar/dev/gss/src/gss-server";
         const auto threads = threads_in.value_or(1);
 
         net::io_context ioc;

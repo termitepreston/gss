@@ -17,7 +17,7 @@ void shared_state::leave(websocket_session *session) {
 
 void shared_state::send(std::string message) {
     // put the message inside a shared pointer.
-    auto const ss = boost::make_shared<const std::string>(std::move(message));
+    const auto ss = boost::make_shared<const std::string>(std::move(message));
 
     // make a local list of all the weak pointers
     // representing the sessions, so we can do the actual
