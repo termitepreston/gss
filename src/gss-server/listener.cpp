@@ -2,9 +2,13 @@
 #include "http_session.hpp"
 #include <iostream>
 
-listener::listener(net::io_context &ioc, tcp::endpoint endpoint,
-                   boost::shared_ptr<SharedState> const &state)
-    : ioc_(ioc), acceptor_(ioc), state_(state) {
+listener::listener(
+    net::io_context &ioc, tcp::endpoint endpoint,
+    boost::shared_ptr<shared_state> const &state,
+    boost::shared_ptr<boost::urls::router<
+        std::function<void(http_session &, boost::urls::matches)>>>
+        router)
+    : ioc_(ioc), acceptor_(ioc), state_(state), router_{router} {
     beast::error_code ec;
 
     // Open the acceptor
@@ -57,7 +61,8 @@ void listener::on_accept(beast::error_code ec, tcp::socket socket) {
         return fail(ec, "accept");
     else
         // Launch a new session for this connection
-        boost::make_shared<http_session>(std::move(socket), state_)->run();
+        boost::make_shared<http_session>(std::move(socket), state_, router_)
+            ->run();
 
     // The new connection gets its own strand
     acceptor_.async_accept(

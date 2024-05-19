@@ -10,13 +10,13 @@
 #include <string>
 #include <vector>
 
-class SharedState;
+class shared_state;
 
 class websocket_session
     : public boost::enable_shared_from_this<websocket_session> {
     beast::flat_buffer buffer_;
     websocket::stream<beast::tcp_stream> ws_;
-    boost::shared_ptr<SharedState> state_;
+    boost::shared_ptr<shared_state> state_;
     std::vector<boost::shared_ptr<const std::string>> queue_;
     std::string uid_;
 
@@ -27,7 +27,7 @@ class websocket_session
 
   public:
     websocket_session(tcp::socket &&socket,
-                      const boost::shared_ptr<SharedState> &state);
+                      const boost::shared_ptr<shared_state> &state);
 
     ~websocket_session();
 

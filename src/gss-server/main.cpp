@@ -16,6 +16,11 @@
 #include <iostream>
 #include <vector>
 
+#include <functional>
+#include <router.hpp>
+
+#include "http_session.hpp"
+
 // This file will be generated automatically when cur_you run the CMake
 // configuration step. It creates a namespace called `gss`. You can modify
 // the source template at `configured_files/config.hpp.in`.
@@ -54,24 +59,29 @@ int main(int argc, const char **argv) {
         const char *doc_root = "/home/alazar/dev/gss/src/gss-server";
         const auto threads = threads_in.value_or(1);
 
+        spdlog::info("running server on {}:{}.", address.to_string(),
+                     port.value());
+
         net::io_context ioc;
 
-        // timer code.
-        boost::posix_time::seconds interval{6};
-
-        auto ss = boost::make_shared<SharedState>(doc_root, ioc);
+        auto ss = boost::make_shared<shared_state>(doc_root, ioc);
 
         std::thread consumer{[&ss]() { ss->process_tasks(); }};
 
         consumer.detach();
 
-        boost::make_shared<listener>(ioc, tcp::endpoint{address, port.value()},
-                                     ss)
+        // Define a router for our app.
+
+        auto router = boost::make_shared<boost::urls::router<
+            std::function<void(http_session &, boost::urls::matches)>>>();
+
+                boost::make_shared<listener>(ioc, tcp::endpoint{address, port.value()},
+                                     ss, router)
             ->run();
 
         net::signal_set signals{ioc, SIGINT, SIGTERM};
 
-                signals.async_wait(
+        signals.async_wait(
             [&ioc](const boost::system::error_code &, int) { ioc.stop(); });
 
         std::vector<std::thread> v;
@@ -81,9 +91,6 @@ int main(int argc, const char **argv) {
             v.emplace_back([&ioc] { ioc.run(); });
 
         ioc.run();
-
-        spdlog::info("running server on {}:{}.", address.to_string(),
-                     port.value());
 
         for (auto &t : v)
             t.join();

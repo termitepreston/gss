@@ -6,7 +6,7 @@
 using json = nlohmann::json;
 
 websocket_session::websocket_session(
-    tcp::socket &&socket, boost::shared_ptr<SharedState> const &state)
+    tcp::socket &&socket, boost::shared_ptr<shared_state> const &state)
     : ws_(std::move(socket)), state_(state), uid_{} {}
 
 websocket_session::~websocket_session() {

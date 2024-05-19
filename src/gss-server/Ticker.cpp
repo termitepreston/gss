@@ -1,7 +1,7 @@
 #include "Ticker.hpp"
 
 Ticker::Ticker(net::io_context &ioc, boost::posix_time::seconds interval,
-               const boost::shared_ptr<SharedState> &state)
+               const boost::shared_ptr<shared_state> &state)
     : ioc_{ioc}, interval_{interval}, timer_{ioc, interval}, state_{state} {}
 
 void Ticker::tick(const boost::system::error_code &ec) {
