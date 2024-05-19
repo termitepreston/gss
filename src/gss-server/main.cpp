@@ -8,7 +8,6 @@
 
 #include <spdlog/spdlog.h>
 
-#include "Ticker.hpp"
 #include "listener.hpp"
 #include "shared_state.hpp"
 
@@ -60,9 +59,11 @@ int main(int argc, const char **argv) {
         // timer code.
         boost::posix_time::seconds interval{6};
 
-        auto ss = boost::make_shared<SharedState>(doc_root);
+        auto ss = boost::make_shared<SharedState>(doc_root, ioc);
 
-        boost::make_shared<Ticker>(ioc, interval, ss)->run();
+        std::thread consumer{[&ss]() { ss->process_tasks(); }};
+
+        consumer.detach();
 
         boost::make_shared<listener>(ioc, tcp::endpoint{address, port.value()},
                                      ss)
@@ -70,7 +71,7 @@ int main(int argc, const char **argv) {
 
         net::signal_set signals{ioc, SIGINT, SIGTERM};
 
-        signals.async_wait(
+                signals.async_wait(
             [&ioc](const boost::system::error_code &, int) { ioc.stop(); });
 
         std::vector<std::thread> v;

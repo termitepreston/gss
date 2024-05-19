@@ -6,6 +6,7 @@
 
 #include <cstdlib>
 #include <memory>
+#include <spdlog/spdlog.h>
 #include <string>
 #include <vector>
 
@@ -17,6 +18,7 @@ class websocket_session
     websocket::stream<beast::tcp_stream> ws_;
     boost::shared_ptr<SharedState> state_;
     std::vector<boost::shared_ptr<const std::string>> queue_;
+    std::string uid_;
 
     void fail(beast::error_code ec, const char *what);
     void on_accept(beast::error_code ec);
@@ -33,22 +35,28 @@ class websocket_session
     void run(http::request<Body, http::basic_fields<Allocator>> req);
 
     void send(boost::shared_ptr<std::string const> const &ss);
+    std::string uid() const noexcept;
 
   private:
     void on_send(boost::shared_ptr<std::string const> const &ss);
 };
 
+#include <iostream>
+
+using namespace std;
+
 template <class Body, class Allocator>
 void websocket_session::run(
     http::request<Body, http::basic_fields<Allocator>> req) {
+
+    uid_ = req.target().substr(1);
+
     ws_.set_option(
         websocket::stream_base::timeout::suggested(beast::role_type::server));
 
     ws_.set_option(
         websocket::stream_base::decorator([](websocket::response_type &res) {
-            res.set(http::field::server,
-                    std::string(BOOST_BEAST_VERSION_STRING) +
-                        "websocket_chat_multi");
+            res.set(http::field::server, "Generic Service Scheduler");
         }));
 
     ws_.async_accept(req,

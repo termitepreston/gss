@@ -2,6 +2,12 @@
 #include "websocket_session.hpp"
 #include <boost/config.hpp>
 #include <iostream>
+#include <nlohmann/json.hpp>
+#include <router.hpp>
+#include <spdlog/spdlog.h>
+
+namespace urls = boost::urls;
+namespace core = boost::core;
 
 //------------------------------------------------------------------------------
 
@@ -89,7 +95,8 @@ std::string path_cat(beast::string_view base, beast::string_view path) {
 template <class Body, class Allocator>
 http::message_generator
 handle_request(beast::string_view doc_root,
-               http::request<Body, http::basic_fields<Allocator>> &&req) {
+               http::request<Body, http::basic_fields<Allocator>> &&req,
+               boost::shared_ptr<SharedState> state) {
     // Returns a bad request response
     auto const bad_request = [&req](beast::string_view why) {
         http::response<http::string_body> res{http::status::bad_request,
@@ -128,13 +135,35 @@ handle_request(beast::string_view doc_root,
     };
 
     // Make sure we can handle the method
-    if (req.method() != http::verb::get && req.method() != http::verb::head)
+    if (req.method() != http::verb::get && req.method() != http::verb::head &&
+        req.method() != http::verb::post)
         return bad_request("Unknown HTTP-method");
 
     // Request path must be absolute and not contain "..".
     if (req.target().empty() || req.target()[0] != '/' ||
         req.target().find("..") != beast::string_view::npos)
         return bad_request("Illegal request-target");
+
+    if (req.method() == http::verb::post) {
+        spdlog::info("POSt request with payload = {}", req.body());
+
+        using json = nlohmann::json;
+
+        json p = json::parse(req.body());
+
+        state->push_task({p["name"], p["description"], p["duration"]});
+
+        json resp_body{{"name", "alazar"}, {"age", 30}};
+
+        http::response<http::string_body> res{http::status::ok, req.version()};
+        res.set(http::field::server, BOOST_BEAST_VERSION_STRING);
+        res.set(http::field::content_type, "application/json");
+        res.set(http::field::access_control_allow_origin, "*");
+        res.body() = resp_body.dump();
+        res.prepare_payload();
+        res.keep_alive(req.keep_alive());
+        return res;
+    }
 
     // Build the path to the requested file
     std::string path = path_cat(doc_root, req.target());
@@ -234,7 +263,7 @@ void http_session::on_read(beast::error_code ec, std::size_t) {
 
     // Handle request
     http::message_generator msg =
-        handle_request(state_->doc_root(), parser_->release());
+        handle_request(state_->doc_root(), parser_->release(), state_);
 
     // Determine if we should close the connection
     bool keep_alive = msg.keep_alive();

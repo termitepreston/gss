@@ -1,9 +1,13 @@
 #include "websocket_session.hpp"
 #include <iostream>
+#include <nlohmann/json.hpp>
+#include <spdlog/spdlog.h>
+
+using json = nlohmann::json;
 
 websocket_session::websocket_session(
     tcp::socket &&socket, boost::shared_ptr<SharedState> const &state)
-    : ws_(std::move(socket)), state_(state) {}
+    : ws_(std::move(socket)), state_(state), uid_{} {}
 
 websocket_session::~websocket_session() {
     // Remove this session from the list of active sessions
@@ -32,10 +36,21 @@ void websocket_session::on_accept(beast::error_code ec) {
                                              shared_from_this()));
 }
 
+std::string websocket_session::uid() const noexcept { return uid_; }
+
 void websocket_session::on_read(beast::error_code ec, std::size_t) {
     // Handle the error, if any
     if (ec)
         return fail(ec, "read");
+
+    json message = json::parse(beast::buffers_to_string(buffer_.data()));
+
+    if (message["type"] == "hello") {
+        spdlog::info("Received websocket message from {}.",
+                     std::string{message["name"]});
+
+        uid_ = message["name"];
+    }
 
     // Send to all connections
     state_->send(beast::buffers_to_string(buffer_.data()));

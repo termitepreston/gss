@@ -22,6 +22,8 @@ void Ticker::tick(const boost::system::error_code &ec) {
 void Ticker::run() {
     auto self = shared_from_this();
 
-    timer_.async_wait(
-        [self](const boost::system::error_code &ec) { self->tick(ec); });
+    timer_.async_wait([self](const boost::system::error_code &ec) {
+        spdlog::info("Initial tick.");
+        self->tick(ec);
+    });
 }
