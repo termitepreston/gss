@@ -1,22 +1,22 @@
 #include "shared_state.hpp"
 #include "websocket_session.hpp"
 
-SharedState::SharedState(std::string doc_root, net::io_context &ioc)
+shared_state::shared_state(std::string doc_root, net::io_context &ioc)
     : doc_root_{doc_root}, tasks_queue_{}, timer_{ioc} {}
 
-void SharedState::join(websocket_session *session) {
+void shared_state::join(websocket_session *session) {
     std::lock_guard<std::mutex> lock{mutex_};
 
     sessions_.emplace(session);
 }
 
-void SharedState::leave(websocket_session *session) {
+void shared_state::leave(websocket_session *session) {
     std::lock_guard<std::mutex> lock{mutex_};
 
     sessions_.erase(session);
 }
 
-void SharedState::send(std::string message) {
+void shared_state::send(std::string message) {
     // put the message inside a shared pointer.
     const auto ss = boost::make_shared<const std::string>(std::move(message));
 
@@ -39,7 +39,7 @@ void SharedState::send(std::string message) {
             sp->send(ss);
 }
 
-void SharedState::send(std::string id, std::string message) {
+void shared_state::send(std::string id, std::string message) {
     const auto ss = boost::make_shared<const std::string>(std::move(message));
 
     boost::weak_ptr<websocket_session> session;
@@ -58,28 +58,30 @@ void SharedState::send(std::string id, std::string message) {
         sp->send(ss);
 }
 
-void SharedState::push_task(Task task) {
+std::deque<task> shared_state::tasks() const noexcept { return tasks_queue_; }
+
+void shared_state::push_task(task task) {
     std::unique_lock<std::mutex> lock{mutex_};
 
-    tasks_queue_.push(task);
+    tasks_queue_.push_back(task);
 
     lock.unlock();
     cv_.notify_one();
 }
 
-void SharedState::pop_task() {
+void shared_state::pop_task() {
     std::lock_guard<std::mutex> lock{mutex_};
 
-    tasks_queue_.pop();
+    tasks_queue_.pop_front();
 }
 
-Task &SharedState::peek_task() {
+task &shared_state::peek_task() {
     std::lock_guard<std::mutex> lock{mutex_};
 
     return tasks_queue_.front();
 }
 
-void SharedState::process_tasks() {
+void shared_state::process_tasks() {
     std::unique_lock<std::mutex> lock{mutex_};
 
     while (tasks_queue_.empty()) {
@@ -89,11 +91,15 @@ void SharedState::process_tasks() {
     spdlog::info("SS::process_tasks waking because of a new task");
 
     // process task.
-    Task t = std::move(tasks_queue_.front());
-    tasks_queue_.pop();
+    task t = std::move(tasks_queue_.front());
+
+    curr_ = boost::make_shared<task>(t);
+
+    tasks_queue_.pop_front();
 
     t.print();
-    spdlog::info("Processing task for {} seconds.", t.duration().seconds());
+    spdlog::info("Processing task of {} sec. duration.",
+                 t.duration().seconds());
 
     timer_.expires_from_now(t.duration());
 
@@ -101,9 +107,10 @@ void SharedState::process_tasks() {
 
     timer_.async_wait([self, t](const boost::system::error_code &ec) {
         spdlog::info("Timer timeout.");
-        self->send(std::string(t.assignee()),
-                   std::string("Finished processing"));
+        self->send(std::string(t.assignee()), t.serialize().dump());
 
         self->process_tasks();
     });
 }
+
+boost::shared_ptr<task> shared_state::current() { return curr_; }

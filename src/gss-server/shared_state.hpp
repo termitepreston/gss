@@ -1,12 +1,13 @@
 #pragma once
 
 #include <boost/smart_ptr.hpp>
+#include <memory>
 
 #include "Task.hpp"
 #include <condition_variable>
+#include <deque>
 #include <memory>
 #include <mutex>
-#include <queue>
 #include <spdlog/spdlog.h>
 #include <string>
 #include <unordered_set>
@@ -14,29 +15,33 @@
 
 class websocket_session;
 
-class SharedState : public boost::enable_shared_from_this<SharedState> {
+class shared_state : public boost::enable_shared_from_this<shared_state> {
     const std::string doc_root_;
 
     std::mutex mutex_;
     std::condition_variable cv_;
 
     std::unordered_set<websocket_session *> sessions_;
-    std::queue<Task> tasks_queue_;
+    std::deque<task> tasks_queue_;
+    boost::shared_ptr<task> curr_;
     boost::asio::deadline_timer timer_;
 
   public:
-    explicit SharedState(std::string doc_root, net::io_context &ioc);
+    explicit shared_state(std::string doc_root, net::io_context &ioc);
 
     std::string const &doc_root() const noexcept { return doc_root_; }
 
     void process_tasks();
+    std::deque<task> tasks() const noexcept;
 
     void join(websocket_session *session);
     void leave(websocket_session *session);
     void send(std::string message);
     void send(std::string id, std::string message);
 
-    void push_task(Task task);
+    void push_task(task task);
     void pop_task();
-    Task &peek_task();
+    task &peek_task();
+
+    boost::shared_ptr<task> current();
 };
