@@ -46,7 +46,16 @@ function(gss_setup_dependencies)
   endif()
 
   if (NOT TARGET nlohmann_json::nlohmann_json)
-    cpmaddpackage("gh:nlohmann/json@3.11.2")
+    cpmaddpackage(
+      NAME
+      json
+      VERSION
+      3.11.2
+      URL
+      https://github.com/nlohmann/json/releases/download/v3.11.2/json.tar.xz
+      URL_HASH
+      SHA256=8c4b26bf4b422252e13f332bc5e388ec0ab5c3443d24399acb675e68278d341f
+    )
   endif()
 
   if(NOT TARGET CLI11::CLI11)
