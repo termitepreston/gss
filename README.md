@@ -4,6 +4,8 @@
 
 - gss allows user to schedule tasks with a limited time budget from a web-front end 
 
+- Central to the working of this program is a producer consumer 
+task queue that gets enqueued and dequeued concurrently.
 
 ## Building
 
@@ -14,6 +16,12 @@ to be installed to work:
 2. ccache
 3. Ninja
 4. mold
+
+## Dependencies
+1. Boost (ASIO, Beast) for C++ networking.
+2. nlohmann/json for JSON SerDe.
+3. spdlog for logging
+4. Catch2 for testing.
 
 
 ```bash
