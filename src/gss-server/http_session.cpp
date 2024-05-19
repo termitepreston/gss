@@ -9,6 +9,8 @@
 namespace urls = boost::urls;
 namespace core = boost::core;
 
+using json = nlohmann::json;
+
 //------------------------------------------------------------------------------
 
 // Return a reasonable mime type based on the extension of a file.
@@ -96,7 +98,10 @@ template <class Body, class Allocator>
 http::message_generator
 handle_request(beast::string_view doc_root,
                http::request<Body, http::basic_fields<Allocator>> &&req,
-               boost::shared_ptr<SharedState> state) {
+               boost::shared_ptr<shared_state> state,
+               boost::shared_ptr<boost::urls::router<
+                   std::function<void(http_session &, boost::urls::matches)>>>
+                   router) {
     // Returns a bad request response
     auto const bad_request = [&req](beast::string_view why) {
         http::response<http::string_body> res{http::status::bad_request,
@@ -145,15 +150,45 @@ handle_request(beast::string_view doc_root,
         return bad_request("Illegal request-target");
 
     if (req.method() == http::verb::post) {
-        spdlog::info("POSt request with payload = {}", req.body());
 
-        using json = nlohmann::json;
+        if (req.target().find("/api/tasks") != beast::string_view::npos) {
+            spdlog::info("req.target() = {}", std::string{req.target()});
+            spdlog::info("POSt request with payload = {}", req.body());
 
-        json p = json::parse(req.body());
+            json p = json::parse(req.body());
 
-        state->push_task({p["name"], p["description"], p["duration"]});
+            state->push_task({p["name"], p["description"], p["duration"]});
 
-        json resp_body{{"name", "alazar"}, {"age", 30}};
+            json resp_body{{"name", p["name"]}};
+
+            http::response<http::string_body> res{http::status::ok,
+                                                  req.version()};
+            res.set(http::field::server, BOOST_BEAST_VERSION_STRING);
+            res.set(http::field::content_type, "application/json");
+            res.set(http::field::access_control_allow_origin, "*");
+            res.body() = resp_body.dump();
+            res.prepare_payload();
+            res.keep_alive(req.keep_alive());
+            return res;
+        }
+    }
+
+    if (req.method() == http::verb::get &&
+        req.target().find("/api/admin") != boost::string_view::npos) {
+
+        spdlog::info("req.target() = {}", std::string{req.target()});
+        spdlog::info("Responding to /api/admin");
+
+        std::vector<json> tasks;
+        tasks.reserve(state->tasks().size());
+
+        for (auto &t : state->tasks())
+            tasks.emplace_back(t.serialize());
+
+        auto t = state->current();
+
+        json resp_body{{"processing", t ? t->serialize() : nullptr},
+                       {"pending", tasks}};
 
         http::response<http::string_body> res{http::status::ok, req.version()};
         res.set(http::field::server, BOOST_BEAST_VERSION_STRING);
@@ -209,9 +244,12 @@ handle_request(beast::string_view doc_root,
 
 //------------------------------------------------------------------------------
 
-http_session::http_session(tcp::socket &&socket,
-                           boost::shared_ptr<SharedState> const &state)
-    : stream_(std::move(socket)), state_(state) {}
+http_session::http_session(
+    tcp::socket &&socket, boost::shared_ptr<shared_state> const &state,
+    boost::shared_ptr<
+        boost::urls::router<std::function<void(http_session &, urls::matches)>>>
+        router)
+    : stream_(std::move(socket)), state_(state), router_{router} {}
 
 void http_session::run() { do_read(); }
 
@@ -263,7 +301,7 @@ void http_session::on_read(beast::error_code ec, std::size_t) {
 
     // Handle request
     http::message_generator msg =
-        handle_request(state_->doc_root(), parser_->release(), state_);
+        handle_request(state_->doc_root(), parser_->release(), state_, router_);
 
     // Determine if we should close the connection
     bool keep_alive = msg.keep_alive();
