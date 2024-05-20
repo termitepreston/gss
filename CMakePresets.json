@@ -77,7 +77,7 @@
                 "CMAKE_C_COMPILER": "cl",
                 "CMAKE_CXX_COMPILER": "cl",
                 "CMAKE_BUILD_TYPE": "Debug",
-                "CPM_SOURCE_CACHE": "C:\\Users\\path\\to\\cache",
+                "CPM_SOURCE_CACHE": "C:\\Users\\jojo\\Cache\\CPM",
                 "ENABLE_DEVELOPER_MODE": "ON",
                 "gss_WARNINGS_AS_ERRORS": "OFF",
                 "gss_ENABLE_HARDENING": "OFF",
