@@ -49,8 +49,6 @@ template <class Body, class Allocator>
 void websocket_session::run(
     http::request<Body, http::basic_fields<Allocator>> req) {
 
-    uid_ = req.target().substr(1);
-
     ws_.set_option(
         websocket::stream_base::timeout::suggested(beast::role_type::server));
 
