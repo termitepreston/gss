@@ -2,10 +2,12 @@
 
 ## About Generic Service Scheduler (gss)
 
-- gss allows user to schedule tasks with a limited time budget from a web-front end 
+- gss allows user to schedule tasks with a limited time budget from a web-front end. 
 
 - Central to the working of this program is a producer consumer 
 task queue that gets enqueued and dequeued concurrently.
+
+- We have used a queue that is backed by a doubly linked list for fast [O(n)] enqueue and queue operations. All functions in this list have been unit tested.
 
 ## Building
 
