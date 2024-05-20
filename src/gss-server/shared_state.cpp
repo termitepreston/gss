@@ -58,7 +58,7 @@ void shared_state::send(std::string id, std::string message) {
         sp->send(ss);
 }
 
-std::deque<task> shared_state::tasks() const noexcept { return tasks_queue_; }
+list<task> shared_state::tasks() noexcept { return tasks_queue_; }
 
 void shared_state::push_task(task task) {
     std::unique_lock<std::mutex> lock{mutex_};
@@ -81,6 +81,8 @@ task &shared_state::peek_task() {
     return tasks_queue_.front();
 }
 
+// <-[T1 T2 T3 T4 T]<-
+// process(T0)
 void shared_state::process_tasks() {
     std::unique_lock<std::mutex> lock{mutex_};
 
@@ -107,7 +109,11 @@ void shared_state::process_tasks() {
 
     timer_.async_wait([self, t](const boost::system::error_code &ec) {
         spdlog::info("Timer timeout.");
-        self->send(std::string(t.assignee()), t.serialize().dump());
+
+        auto update_msg = t.serialize();
+        update_msg["type"] = "update";
+
+        self->send(std::string(t.assignee()), update_msg.dump());
 
         self->process_tasks();
     });

@@ -15,6 +15,7 @@ target_link_system_libraries(
           Boost::url
           nlohmann_json::nlohmann_json
           gss::router
+          gss::containers
           )
 
 target_include_directories(gss-server PRIVATE "${CMAKE_BINARY_DIR}/configured_files/include")

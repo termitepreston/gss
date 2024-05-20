@@ -5,7 +5,7 @@
 
 #include "Task.hpp"
 #include <condition_variable>
-#include <deque>
+#include <list.hpp>
 #include <memory>
 #include <mutex>
 #include <spdlog/spdlog.h>
@@ -22,7 +22,7 @@ class shared_state : public boost::enable_shared_from_this<shared_state> {
     std::condition_variable cv_;
 
     std::unordered_set<websocket_session *> sessions_;
-    std::deque<task> tasks_queue_;
+    list<task> tasks_queue_;
     boost::shared_ptr<task> curr_;
     boost::asio::deadline_timer timer_;
 
@@ -32,7 +32,7 @@ class shared_state : public boost::enable_shared_from_this<shared_state> {
     std::string const &doc_root() const noexcept { return doc_root_; }
 
     void process_tasks();
-    std::deque<task> tasks() const noexcept;
+    list<task> tasks() noexcept;
 
     void join(websocket_session *session);
     void leave(websocket_session *session);
